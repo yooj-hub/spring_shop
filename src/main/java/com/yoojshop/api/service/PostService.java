@@ -2,6 +2,7 @@ package com.yoojshop.api.service;
 
 import com.yoojshop.api.domain.Post;
 import com.yoojshop.api.domain.PostEditor;
+import com.yoojshop.api.exception.PostNotFound;
 import com.yoojshop.api.repository.PostRepository;
 import com.yoojshop.api.request.PostCreate;
 import com.yoojshop.api.request.PostEdit;
@@ -40,7 +41,7 @@ public class PostService {
     }
 
     public PostResponse get(Long id) {
-        return new PostResponse(postRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 글입니다")));
+        return new PostResponse(postRepository.findById(id).orElseThrow(PostNotFound::new));
 
 
     }
@@ -54,7 +55,7 @@ public class PostService {
 
     @Transactional
     public void edit(Long id, PostEdit postEdit){
-        Post post = postRepository.findById(id).orElseThrow(() -> new IllegalArgumentException("존재하지 않는 글입니다."));
+        Post post = postRepository.findById(id).orElseThrow(PostNotFound::new);
 
 
         PostEditor.PostEditorBuilder postEditorBuilder = post.toEditor();
@@ -65,6 +66,16 @@ public class PostService {
             postEditorBuilder.content(postEdit.getContent());
         }
         post.edit(postEditorBuilder.build());
+
+    }
+
+    @Transactional
+    public void delete(Long id){
+        Post post = postRepository.findById(id).orElseThrow(PostNotFound::new);
+
+        // 존재하는 경우
+
+        postRepository.delete(post);
 
 
     }

@@ -1,11 +1,13 @@
 package com.yoojshop.api.service;
 
 import com.yoojshop.api.domain.Post;
+import com.yoojshop.api.exception.PostNotFound;
 import com.yoojshop.api.repository.PostRepository;
 import com.yoojshop.api.request.PostCreate;
 import com.yoojshop.api.request.PostEdit;
 import com.yoojshop.api.request.PostSearch;
 import com.yoojshop.api.response.PostResponse;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -78,6 +80,25 @@ class PostServiceTest {
         assertThat(response).isNotNull();
         assertThat(response.getTitle()).isEqualTo("foo");
         assertThat(response.getContent()).isEqualTo("bar");
+
+    }
+
+    @Test
+    @DisplayName("글 1개 조회 실패")
+    void 글_한개_조회_실패() throws Exception {
+        //given
+        Post requestPost = Post.builder()
+                .title("foo")
+                .content("bar")
+                .build();
+        postRepository.save(requestPost);
+        //when
+//        Assertions.assertThatThrownBy(() -> postService.get(requestPost.getId() + 1L), "예외처리가 잘못 되었어요")
+//                .isInstanceOf(IllegalArgumentException.class)
+//                .extracting(Throwable::getMessage).isEqualTo("존재하지 않는 글입니다");
+        PostNotFound e = assertThrows(PostNotFound.class, () -> postService.get(requestPost.getId() + 1L));
+        assertEquals(e.getMessage(), "존재하지 않는 글입니다.");
+
 
     }
 
@@ -163,7 +184,7 @@ class PostServiceTest {
     }
 
     @Test
-    @DisplayName("글 1페이지 조회")
+    @DisplayName("글 내용 수정")
     void 글_내용_수정() {
         //given
 
@@ -185,7 +206,67 @@ class PostServiceTest {
 
         assertEquals(changedPost.getTitle(), "foo");
         assertEquals(changedPost.getContent(), "hello");
+    }
 
+    @Test
+    @DisplayName("글 내용 수정 실패")
+    void 글_내용_수정_실패() {
+        //given
+
+
+        Post post = Post.builder()
+                .title("foo")
+                .content("bar")
+                .build();
+
+        postRepository.save(post);
+        //when
+        PostEdit postEdit = PostEdit.builder()
+                .content("hello")
+                .build();
+
+
+        PostNotFound e = assertThrows(PostNotFound.class, () ->  postService.edit(post.getId()+1L, postEdit));
+        assertEquals(e.getMessage(), "존재하지 않는 글입니다.");
+    }
+
+    @Test
+    @DisplayName("게시글 삭제")
+    void 게시글_삭제() {
+        //given
+        Post post = Post.builder()
+                .title("foo")
+                .content("bar")
+                .build();
+
+        postRepository.save(post);
+
+
+        //when
+
+        postService.delete(post.getId());
+
+        //then
+        assertThat(postRepository.count()).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("게시글 삭제 실패")
+    void 게시글_삭제_실패() {
+        //given
+        Post post = Post.builder()
+                .title("foo")
+                .content("bar")
+                .build();
+
+        postRepository.save(post);
+
+
+        //when
+        PostNotFound e = assertThrows(PostNotFound.class, () ->  postService.delete(post.getId()+1L));
+        assertEquals(e.getMessage(), "존재하지 않는 글입니다.");
+
+        //then
     }
 
 

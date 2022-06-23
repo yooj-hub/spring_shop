@@ -1,6 +1,7 @@
 package com.yoojshop.api.controller;
 
 import com.yoojshop.api.domain.Post;
+import com.yoojshop.api.exception.InvalidRequest;
 import com.yoojshop.api.request.PostCreate;
 import com.yoojshop.api.request.PostEdit;
 import com.yoojshop.api.request.PostSearch;
@@ -28,11 +29,12 @@ import java.util.stream.Collectors;
 public class PostController {
     private final PostService postService;
 
-
     @PostMapping("/posts")
-    public Map<String, String> post(@RequestBody @Valid PostCreate request) throws Exception {
+    public void post(@RequestBody @Valid PostCreate request) throws Exception {
+        request.validate();
+
+
         postService.write(request);
-        return Map.of();
     }
 
     /**
@@ -68,6 +70,11 @@ public class PostController {
         log.info("[post id] : {}",postId);
         postService.edit(postId, request);
 
+    }
+
+    @DeleteMapping("/posts/{postId}")
+    public void delete(@PathVariable Long postId){
+        postService.delete(postId);
     }
 
 

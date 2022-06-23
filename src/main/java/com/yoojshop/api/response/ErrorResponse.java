@@ -1,6 +1,7 @@
 package com.yoojshop.api.response;
 
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -18,16 +19,19 @@ import java.util.Map;
  * }
  */
 @Getter
+        //@JsonInclude(value = JsonInclude.Include.NON_EMPTY)
 public class ErrorResponse {
 
     private final String code;
     private final String message;
-    private final Map<String, String> validation = new HashMap<>();
+    private final Map<String, String> validation;
 
     @Builder
-    public ErrorResponse(String code, String message) {
+    public ErrorResponse(String code, String message, Map<String, String> validation) {
         this.code = code;
         this.message = message;
+        this.validation = validation;
+
     }
 
     public void addValidation(String fileName, String errorMessage){

@@ -27,6 +27,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -51,21 +52,20 @@ class PostControllerTest {
         postRepository.deleteAll();
     }
 
-    @Test
-    @DisplayName("/posts 요청시 Hello World를 출력한다.")
-    void test() throws Exception {
-        // expected
-        mockMvc.perform(MockMvcRequestBuilders.post("/posts")
-                        .contentType(APPLICATION_JSON)
-                        .content("{\"title\": \"제목입니다\", \"content\" : \"내용입니다.\"}"))
-//                        .param("title", "글 제목입니다.")
-//                        .param("content", "글 내용입니다."))
-                .andExpect(status().isOk())
-                .andExpect(content().string("{}"))
-                .andDo(print());
-
-
-    }
+//    @Test
+//    @DisplayName("/posts 요청시 Hello World를 출력한다.")
+//    void test() throws Exception {
+//        // expected
+//        mockMvc.perform(MockMvcRequestBuilders.post("/posts")
+//                        .contentType(APPLICATION_JSON)
+//                        .content("{\"title\": \"제목입니다\", \"content\" : \"내용입니다.\"}"))
+////                        .param("title", "글 제목입니다.")
+////                        .param("content", "글 내용입니다."))
+//                .andExpect(status().isOk())
+//                .andDo(print());
+//
+//
+//    }
 
     @Test
     @DisplayName("/posts title 값은 필수다.")
@@ -243,7 +243,87 @@ class PostControllerTest {
                 .andDo(print());
 
 
+    }
+
+    @Test
+    @DisplayName("게시글 삭제")
+    void 게시글_삭제() throws Exception {
+        //given
+        Post post = Post.builder()
+                .title("foo")
+                .content("bar")
+                .build();
+
+        postRepository.save(post);
+
+        //expected
+
+        mockMvc.perform(delete("/posts/{postId}", post.getId())
+                        .contentType(APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andDo(print());
+
+        assertThat(postRepository.count()).isEqualTo(0);
 
     }
+
+
+    @Test
+    @DisplayName("존재하지 않는 게시글 조회")
+    void 존재하지_않는_게시글_조회() throws Exception {
+        //given
+        mockMvc.perform(delete("/posts/{postId}", 1L)
+                        .contentType(APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andDo(print());
+
+        //when
+
+        //then
+    }
+
+    @Test
+    @DisplayName("존재하지 않는 게시글 수정")
+    void 존재하지_않는_게시글_수정() throws Exception {
+        //given
+        PostEdit postEdit = PostEdit.builder()
+                .title("yoo")
+                .content("bar")
+                .build();
+
+
+
+        //expected
+        mockMvc.perform(patch("/posts/{postId}", 1L)
+                        .contentType(APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(postEdit)))
+                .andExpect(status().isNotFound())
+                .andDo(print());
+    }
+
+    @Test
+    @DisplayName("특정단어는 제목에 포함되지않는다")
+    void 특정단어는_제목에_포함되지않는다() throws Exception {
+
+        //given
+
+        PostCreate request = PostCreate.builder()
+                .title("바보123123")
+                .content("내용입니다.")
+                .build();
+
+        String json = objectMapper.writeValueAsString(request);
+
+        //expected
+        mockMvc.perform(MockMvcRequestBuilders.post("/posts")
+                        .contentType(APPLICATION_JSON)
+                        .content(json))
+
+                .andExpect(status().isBadRequest())
+                .andDo(print());
+
+
+    }
+
 
 }
